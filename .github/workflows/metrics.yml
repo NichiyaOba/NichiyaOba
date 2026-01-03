@@ -1,0 +1,39 @@
+name: Metrics
+on:
+  schedule: [{cron: "0 0 * * *"}] # 毎日0時に自動実行
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  # メイン（ヘッダー + 言語）
+  github-metrics:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: lowlighter/metrics@latest
+        with:
+          filename: metrics.svg
+          token: ${{ secrets.METRICS_TOKEN }}
+          user: NichiyaOba
+          template: classic
+          base: header, community, repositories, metadata
+          plugin_languages: yes
+          plugin_languages_sections: most-used
+          plugin_languages_colors: github
+          plugin_languages_limit: 8
+          plugin_languages_indepth: no
+
+  # コントリビューショングラフ（GitHub の草）
+  isocalendar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: lowlighter/metrics@latest
+        with:
+          filename: isocalendar.svg
+          token: ${{ secrets.METRICS_TOKEN }}
+          user: NichiyaOba
+          template: classic
+          base: ""
+          plugin_isocalendar: yes
+          plugin_isocalendar_duration: full-year

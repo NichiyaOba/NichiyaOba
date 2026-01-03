@@ -1,0 +1,50 @@
+name: Update README
+
+on:
+  push:
+    paths:
+      - 'sections/**'
+      - 'README_TEMPLATE.md'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-readme:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate README
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            let readme = fs.readFileSync('README_TEMPLATE.md', 'utf8');
+
+            const sections = [
+              { start: '<!-- ABOUT_START -->', end: '<!-- ABOUT_END -->', file: 'sections/about.md' },
+              { start: '<!-- TECH_STACK_START -->', end: '<!-- TECH_STACK_END -->', file: 'sections/tech-stack.md' },
+              { start: '<!-- FOOTER_START -->', end: '<!-- FOOTER_END -->', file: 'sections/footer.md' }
+            ];
+
+            for (const section of sections) {
+              if (fs.existsSync(section.file)) {
+                const content = fs.readFileSync(section.file, 'utf8');
+                const regex = new RegExp(`${section.start}[\\s\\S]*?${section.end}`, 'g');
+                readme = readme.replace(regex, `${section.start}\n${content}\n${section.end}`);
+              }
+            }
+
+            fs.writeFileSync('README.md', readme);
+            console.log('README.md generated successfully');
+
+      - name: Commit README
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git diff --staged --quiet || git commit -m "Update README"
+          git push
